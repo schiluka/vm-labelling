@@ -9,11 +9,37 @@ $( "#btnCategory" ).click(function() {
 });
 
 $( "#btnSaveLabel" ).click(function() {
-  alert( "Calling save label to server" );
-  $('#labelModal').modal('hide');
-});
+  var labelValue = $('#txtModalLabel').val();
+  $.ajax({ 
+  	url: '/saveLabel',
+    type: 'POST',
+    cache: false, 
+    contentType: 'application/json',
+    data: JSON.stringify({ labelName: labelValue }), 
+    success: function(data){
+    	alert(data)
+    }
+    , error: function(jqXHR, textStatus, err){
+    		alert('text status '+textStatus+', err '+err)
+    	}
+    });
+    $('#labelModal').modal('hide');
+});   
 
 $( "#btnSaveCategory" ).click(function() {
-  alert( "Calling save category to server" );
-  $('#categoryModal').modal('hide');
-});
+  var categoryValue = $('#txtModalCategory').val();
+  $.ajax({ 
+  	url: '/saveCategory',
+    type: 'POST',
+    cache: false, 
+    contentType: 'application/json',
+    data: JSON.stringify({ categoryName: categoryValue }), 
+    success: function(data){
+    	alert(data)
+    }
+    , error: function(jqXHR, textStatus, err){
+    		alert('text status '+textStatus+', err '+err)
+    	}
+    });
+    $('#categoryModal').modal('hide');
+});   

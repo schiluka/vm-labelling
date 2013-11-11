@@ -14,6 +14,12 @@ app.use('/public',express.static(path.join(__dirname, '/public')));
 app.use('/assets',express.static(path.join(__dirname, '/public/assets')));
 app.use('/lib',express.static(path.join(__dirname, '/public/lib')));
 
+app.configure(function(){   
+    app.use(express.bodyParser());
+    app.use(app.router);
+    app.use(express.logger());
+});
+
 app.configure('development', function(){
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
 });
@@ -99,6 +105,25 @@ app.get('/home', function(req,res){
   res.render('home');
 });
 
+app.post('/saveLabel', function(req,res){
+  console.log('saveLabel called');
+  console.log('input param:' + req.body.labelName);
+  //Add this label into labels.txt
+  var body = 'Label Saved';
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Length', body.length);
+  res.end(body);
+});
+
+app.post('/saveCategory', function(req,res){
+  console.log('saveCategory called');
+  console.log('input param:' + req.body.categoryName);
+  //Add this category into labels.txt
+  var body = 'Category Saved';
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Length', body.length);
+  res.end(body);
+});
 if (!module.parent) {
     app.listen(3000);
     console.log("Express server listening on port 3000");
