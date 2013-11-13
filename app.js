@@ -1,10 +1,47 @@
 var express = require('express')
   , fs = require('fs')
+  , passport = require('passport')
+  , util = require('util')
+  , BoxStrategy = require('passport-box').Strategy
   , oauthSecrets = JSON.parse(fs.readFileSync('./secrets.json', 'utf-8'))
   , http = require('http');
 
 var path = require('path');  
-var querystring = require('querystring');
+//var querystring = require('querystring');
+
+// Passport session setup.
+passport.serializeUser( function(user, done) {
+        done(null, user);
+});
+passport.deserializeUser( function(obj, done) {
+        done(null, obj);
+});
+
+var aToken;
+var rToken;
+var boxProfile;
+passport.use(new BoxStrategy({
+    clientID: oauthSecrets.box.clientId,
+    clientSecret: oauthSecrets.box.clientSecret,
+    callbackURL: "http://127.0.0.1:3000/auth/box/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+  	console.log('accessToken:' + accessToken);
+  	console.log('refreshToken:' + refreshToken);
+  	aToken = accessToken;
+  	rToken = refreshToken;
+  	// asynchronous verification, for effect...
+    process.nextTick(function () {
+      
+      // To keep the example simple, the user's Box profile is returned to
+      // represent the logged-in user.  In a typical application, you would want
+      // to associate the Box account with a user record in your database,
+      // and return that user instead.
+      return done(null, profile);
+    });
+  }
+));
+
 		
 var app = module.exports = express();
 app.set('view engine', 'html');
@@ -15,9 +52,13 @@ app.use('/assets',express.static(path.join(__dirname, '/public/assets')));
 app.use('/lib',express.static(path.join(__dirname, '/public/lib')));
 
 app.configure(function(){   
-    app.use(express.bodyParser());
-    app.use(app.router);
-    app.use(express.logger());
+  app.use(express.bodyParser());
+  // Initialize Passport!  Also use passport.session() middleware, to support
+  // persistent login sessions (recommended).
+  app.use(passport.initialize());
+  app.use(passport.session());
+  app.use(app.router);
+  app.use(express.logger());
 });
 
 app.configure('development', function(){
@@ -28,77 +69,30 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
-app.get('/auth/box', function(req, res){
-    var client_id = oauthSecrets.box.clientId;
-    console.log('clientid:'+client_id)
-    var provider = 'box';
-    var redirect_uri = 'http://localhost:3000/auth/box/callback';
-    var boxAuthUrl = 'https://www.box.com/api/oauth2/authorize?response_type=code&client_id='
-    	+ client_id + '&state=authenticated&redirect_uri='+ redirect_uri;
-    console.log('boxAuthUrl:'+boxAuthUrl);
-    res.redirect(boxAuthUrl); 
+app.get('/login', function(req, res){
+  res.redirect('/auth/box');
 });
 
-var authCode;  
-var clientId = oauthSecrets.box.clientId;
-var clientSecret = oauthSecrets.box.clientSecret;
-
-app.get('/auth/:provider/callback', function(req, res){
-  console.log('callback called');
-  authCode = res.req.query.code;
-  console.log('authCode:' + authCode);
-  
-  var post_data = querystring.stringify({
-    'grant_type' : 'authorization_code',
-    'code' : authCode,
-    'client_id': clientId,
-    'client_secret': clientSecret,
-    'redirect_uri' : 'http://localhost:3000/auth/box/token'
-  });
-  //post_data = post_data + '&redirect_uri=http://localhost:3000/auth/box/token';
-  console.log('post_data::' + post_data);
-  var post_options = {
-    host: 'https://www.box.com',
-    path: '/api/oauth2/token',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-      //'Content-Length': post_data.length
-    }
-  };
-  var str = 'grant_type=authorization_code' +
-  			'&code=' + authCode +
-  			'&client_id=' + clientId +
-  			'&client_secret=' + //clientSecret;// +
-  			'&redirect_uri=http://localhost:3000/auth/box/token';
-  //var redirect = '&redirect_uri=' + encodeURIComponent('http://localhost:3000/auth/box/token');	
-  //var data_encoded = str + redirect;		
-  var data_encoded = encodeURIComponent(str);
-  console.log('data_encoded:' + data_encoded);
-  var post_req = http.request(post_options, function(res2) {
-      //res2.setEncoding('utf8');
-      console.log('STATUS: ' + res2.statusCode);
-      console.log('HEADERS: ' + JSON.stringify(res2.headers));
-      res2.on('data', function (chunk) {
-          console.log('Response: ' + chunk);
-      });
-  });
-  post_req.on('error', function(errData) {
-    console.log('====error:' + errData);
-    console.log('====error:' + errData.stack); 
-  });
-
-  // post the data
-  post_req.write(post_data);
-  //post_req.write(data_encoded);
-  //post_req.write(str);
-  post_req.end();
-
+app.get('/auth/box',
+  passport.authenticate('box'),
+  function(req, res){
+    // The request will be redirected to Box for authentication, so this
+    // function will not be called.
 });
 
-app.get('/auth/box/token', function(req, res){
-  console.log(res);
+app.get('/auth/box/callback', 
+  passport.authenticate('box', { failureRedirect: '/login' }),
+  function(req, res) {
+  	console.log('auth callback');
+  	//console.log(res);
+    res.redirect('/home');
 });
+
+app.get('/logout', function(req, res){
+  req.logout();
+  res.redirect('/');
+});
+
 
 app.get('/home', function(req,res){
   console.log('home called');
