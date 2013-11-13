@@ -3,8 +3,12 @@
    "description": "First Express app",
    "version": "0.0.1",
    "dependencies": {
-      "express": "3.x",
-	"oauth2": "latest"
+      	"express": "3.x",
+	"ejs": "latest",
+	"passport": "latest",
+	"passport-box": "latest",
+	"passport-oauth": "latest",
+	"pkginfo": "latest"
    }
 } 
 
