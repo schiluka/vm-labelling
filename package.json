@@ -8,7 +8,8 @@
 	"passport": "latest",
 	"passport-box": "latest",
 	"passport-oauth": "latest",
-	"pkginfo": "latest"
+	"pkginfo": "latest",
+	"superagent": "latest"
    }
 } 
 
