@@ -4,7 +4,8 @@ var express = require('express')
   , util = require('util')
   , BoxStrategy = require('passport-box').Strategy
   , oauthSecrets = JSON.parse(fs.readFileSync('./secrets.json', 'utf-8'))
-  , http = require('http');
+  , http = require('http')
+  , boxer = require('./boxer.js');
 
 var path = require('path');  
 //var querystring = require('querystring');
@@ -95,6 +96,8 @@ app.get('/logout', function(req, res){
 
 
 app.get('/home', function(req,res){
+  console.log('calling boxer:' + aToken);	
+  boxer.getVideo(aToken);
   console.log('home called');
   res.render('home');
 });
