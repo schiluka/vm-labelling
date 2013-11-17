@@ -9,7 +9,8 @@
 	"passport-box": "latest",
 	"passport-oauth": "latest",
 	"pkginfo": "latest",
-	"superagent": "latest"
+	"superagent": "latest",
+	"mysql": "2.0.0-alpha9"
    }
 } 
 

@@ -3,12 +3,12 @@ var express = require('express')
   , passport = require('passport')
   , util = require('util')
   , BoxStrategy = require('passport-box').Strategy
-  , oauthSecrets = JSON.parse(fs.readFileSync('./secrets.json', 'utf-8'))
+  , secrets = JSON.parse(fs.readFileSync('./secrets.json', 'utf-8'))
   , http = require('http')
-  , boxer = require('./boxer.js');
+  , boxer = require('./boxer.js')
+  , db = require('./db.js');
 
 var path = require('path');  
-//var querystring = require('querystring');
 
 // Passport session setup.
 passport.serializeUser( function(user, done) {
@@ -22,8 +22,8 @@ var aToken;
 var rToken;
 var boxProfile;
 passport.use(new BoxStrategy({
-    clientID: oauthSecrets.box.clientId,
-    clientSecret: oauthSecrets.box.clientSecret,
+    clientID: secrets.box.clientId,
+    clientSecret: secrets.box.clientSecret,
     callbackURL: "http://127.0.0.1:3000/auth/box/callback"
   },
   function(accessToken, refreshToken, profile, done) {
@@ -98,8 +98,10 @@ app.get('/logout', function(req, res){
 app.get('/home', function(req,res){
   console.log('calling boxer:' + aToken);	
   boxer.getVideo(aToken);
+  db.query();
   console.log('home called');
   res.render('home');
+  db.end();
 });
 
 app.post('/saveLabel', function(req,res){
@@ -121,6 +123,7 @@ app.post('/saveCategory', function(req,res){
   res.setHeader('Content-Length', body.length);
   res.end(body);
 });
+
 if (!module.parent) {
     app.listen(3000);
     console.log("Express server listening on port 3000");
